@@ -51,5 +51,5 @@
         "temp/": true,
         "Temp/": true
     },
-    "dotnet.defaultSolution": "Virtual Antarctic Exploration.sln"
+    "dotnet.defaultSolution": "DCProductions.sln"
 }

@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.Video;
 
@@ -10,6 +11,17 @@ public class PlaybackManager : MonoBehaviour
     [Header("Startup")]
     [SerializeField] private bool autoLoadFirstVideo = true;
     [SerializeField] private bool autoPlayWhenPrepared = true;
+
+    public VideoEntry CurrentVideo => currentVideo;
+    public bool IsPrepared => videoPlayer != null && videoPlayer.isPrepared;
+    public bool IsPlaying => videoPlayer != null && videoPlayer.isPlaying;
+
+    public event Action<VideoEntry> VideoPrepareStarted;
+    public event Action<VideoEntry> VideoPrepared;
+    public event Action<VideoEntry> VideoStarted;
+    public event Action<VideoEntry> VideoPaused;
+    public event Action<VideoEntry> VideoFinished;
+    public event Action<VideoEntry, string> VideoError;
 
     private VideoEntry currentVideo;
 
@@ -39,24 +51,24 @@ public class PlaybackManager : MonoBehaviour
 
     private void Start()
     {
-        if (autoLoadFirstVideo)
+        if (!autoLoadFirstVideo)
+            return;
+
+        VideoEntry firstVideo = catalogManager.GetFirstVideo();
+        if (firstVideo != null)
         {
-            VideoEntry firstVideo = catalogManager.GetFirstVideo();
-            if (firstVideo != null)
-            {
-                LoadVideo(firstVideo);
-            }
+            LoadVideo(firstVideo);
         }
     }
 
     private void OnDestroy()
     {
-        if (videoPlayer != null)
-        {
-            videoPlayer.prepareCompleted -= OnPrepareCompleted;
-            videoPlayer.errorReceived -= OnVideoError;
-            videoPlayer.loopPointReached -= OnVideoFinished;
-        }
+        if (videoPlayer == null)
+            return;
+
+        videoPlayer.prepareCompleted -= OnPrepareCompleted;
+        videoPlayer.errorReceived -= OnVideoError;
+        videoPlayer.loopPointReached -= OnVideoFinished;
     }
 
     public void LoadVideo(VideoEntry entry)
@@ -75,7 +87,9 @@ public class PlaybackManager : MonoBehaviour
             case VideoSourceMode.LocalClip:
                 if (entry.localClip == null)
                 {
-                    Debug.LogError($"PlaybackManager: Local clip missing for '{entry.title}'.");
+                    string message = $"PlaybackManager: Local clip missing for '{entry.title}'.";
+                    Debug.LogError(message);
+                    VideoError?.Invoke(entry, message);
                     return;
                 }
 
@@ -87,7 +101,9 @@ public class PlaybackManager : MonoBehaviour
             case VideoSourceMode.Url:
                 if (string.IsNullOrWhiteSpace(entry.url))
                 {
-                    Debug.LogError($"PlaybackManager: URL missing for '{entry.title}'.");
+                    string message = $"PlaybackManager: URL missing for '{entry.title}'.";
+                    Debug.LogError(message);
+                    VideoError?.Invoke(entry, message);
                     return;
                 }
 
@@ -98,6 +114,7 @@ public class PlaybackManager : MonoBehaviour
         }
 
         Debug.Log($"Preparing video: {entry.title}");
+        VideoPrepareStarted?.Invoke(entry);
         videoPlayer.Prepare();
     }
 
@@ -119,31 +136,32 @@ public class PlaybackManager : MonoBehaviour
         }
 
         videoPlayer.Play();
-        Debug.Log("Video playback started.");
+        Debug.Log($"Video playback started: {currentVideo?.title}");
+        VideoStarted?.Invoke(currentVideo);
     }
 
     public void PauseVideo()
     {
+        if (!videoPlayer.isPlaying)
+            return;
+
+        videoPlayer.Pause();
+        Debug.Log($"Video paused: {currentVideo?.title}");
+        VideoPaused?.Invoke(currentVideo);
+    }
+
+    public void TogglePlayPause()
+    {
+        if (!videoPlayer.isPrepared)
+        {
+            Debug.LogWarning("PlaybackManager: Cannot toggle play/pause before prepare completes.");
+            return;
+        }
+
         if (videoPlayer.isPlaying)
-        {
-            videoPlayer.Pause();
-            Debug.Log("Video paused.");
-        }
-    }
-
-    public void StopVideo()
-    {
-        videoPlayer.Stop();
-        Debug.Log("Video stopped.");
-    }
-
-    public void ResumeVideo()
-    {
-        if (videoPlayer.isPrepared && !videoPlayer.isPlaying)
-        {
-            videoPlayer.Play();
-            Debug.Log("Video resumed.");
-        }
+            PauseVideo();
+        else
+            PlayVideo();
     }
 
     public void SeekTo(double timeSeconds)
@@ -155,12 +173,13 @@ public class PlaybackManager : MonoBehaviour
         }
 
         videoPlayer.time = timeSeconds;
-        Debug.Log($"Seeked to {timeSeconds:F2} seconds.");
+        Debug.Log($"Seeked to {timeSeconds:F2} seconds in {currentVideo?.title}");
     }
 
     private void OnPrepareCompleted(VideoPlayer source)
     {
         Debug.Log($"Prepare complete: {currentVideo?.title}");
+        VideoPrepared?.Invoke(currentVideo);
 
         if (autoPlayWhenPrepared)
         {
@@ -170,11 +189,13 @@ public class PlaybackManager : MonoBehaviour
 
     private void OnVideoError(VideoPlayer source, string message)
     {
-        Debug.LogError($"VideoPlayer error: {message}");
+        Debug.LogError($"VideoPlayer error on '{currentVideo?.title}': {message}");
+        VideoError?.Invoke(currentVideo, message);
     }
 
     private void OnVideoFinished(VideoPlayer source)
     {
-        Debug.Log("Video playback finished.");
+        Debug.Log($"Video playback finished: {currentVideo?.title}");
+        VideoFinished?.Invoke(currentVideo);
     }
 }
