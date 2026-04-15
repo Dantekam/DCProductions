@@ -6,10 +6,8 @@ public class PlaybackManager : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private VideoPlayer videoPlayer;
-    [SerializeField] private VideoCatalogManager catalogManager;
 
     [Header("Startup")]
-    [SerializeField] private bool autoLoadFirstVideo = true;
     [SerializeField] private bool autoPlayWhenPrepared = true;
 
     public VideoEntry CurrentVideo => currentVideo;
@@ -34,31 +32,12 @@ public class PlaybackManager : MonoBehaviour
             return;
         }
 
-        if (catalogManager == null)
-        {
-            Debug.LogError("PlaybackManager: VideoCatalogManager reference is missing.");
-            enabled = false;
-            return;
-        }
-
         videoPlayer.playOnAwake = false;
         videoPlayer.waitForFirstFrame = true;
 
         videoPlayer.prepareCompleted += OnPrepareCompleted;
         videoPlayer.errorReceived += OnVideoError;
         videoPlayer.loopPointReached += OnVideoFinished;
-    }
-
-    private void Start()
-    {
-        if (!autoLoadFirstVideo)
-            return;
-
-        VideoEntry firstVideo = catalogManager.GetFirstVideo();
-        if (firstVideo != null)
-        {
-            LoadVideo(firstVideo);
-        }
     }
 
     private void OnDestroy()
@@ -116,15 +95,6 @@ public class PlaybackManager : MonoBehaviour
         Debug.Log($"Preparing video: {entry.title}");
         VideoPrepareStarted?.Invoke(entry);
         videoPlayer.Prepare();
-    }
-
-    public void LoadVideoByIndex(int index)
-    {
-        VideoEntry entry = catalogManager.GetVideoByIndex(index);
-        if (entry != null)
-        {
-            LoadVideo(entry);
-        }
     }
 
     public void PlayVideo()

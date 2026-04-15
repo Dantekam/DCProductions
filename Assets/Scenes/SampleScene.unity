@@ -1286,9 +1286,10 @@ GameObject:
   m_Component:
   - component: {fileID: 1364744826}
   - component: {fileID: 1364744830}
-  - component: {fileID: 1364744829}
   - component: {fileID: 1364744828}
-  - component: {fileID: 1364744827}
+  - component: {fileID: 1364744829}
+  - component: {fileID: 1364744832}
+  - component: {fileID: 1364744831}
   m_Layer: 0
   m_Name: Managers
   m_TagString: Untagged
@@ -1311,25 +1312,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 463445416}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1364744827
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1364744825}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b5bf99d1a0849ca4aa12dccb038b7b44, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  videos:
-  - title: Everest Test
-    description: 
-    sourceMode: 0
-    localClip: {fileID: 32900000, guid: a5b2dd36564fd644dae83805fbfc746d, type: 3}
-    url: 
-    thumbnail: {fileID: 0}
 --- !u!114 &1364744828
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1355,8 +1337,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   videoPlayer: {fileID: 1241778431}
-  catalogManager: {fileID: 1364744827}
-  autoLoadFirstVideo: 1
   autoPlayWhenPrepared: 1
 --- !u!114 &1364744830
 MonoBehaviour:
@@ -1370,6 +1350,241 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: df9a8fe7655f3ec499605e7d1d1faace, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &1364744831
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1364744825}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aacc1e413f92eaa42b6d7b101d6942c6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  storyGraphManager: {fileID: 1364744832}
+  playbackManager: {fileID: 1364744829}
+  startingNodeId: event_zero
+--- !u!114 &1364744832
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1364744825}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 82076ff63a6ffff49be61b46111872ed, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  nodes:
+  - nodeId: event_zero
+    displayName: Event Zero
+    video:
+      title: Initial Incident
+      description: 
+      sourceMode: 0
+      localClip: {fileID: 0}
+      url: 
+      thumbnail: {fileID: 0}
+    triggerMode: 1
+    triggerTimeSeconds: 0
+    autoContinueNextNodeId: 
+    choices:
+    - choiceId: choice_a
+      choiceText: Go To 1A
+      nextNodeId: event_1A
+    - choiceId: choice_b
+      choiceText: Go To 2A
+      nextNodeId: event_2A
+  - nodeId: event_1A
+    displayName: Event 1A
+    video:
+      title: Initial Incident
+      description: 
+      sourceMode: 0
+      localClip: {fileID: 0}
+      url: 
+      thumbnail: {fileID: 0}
+    triggerMode: 1
+    triggerTimeSeconds: 0
+    autoContinueNextNodeId: 
+    choices:
+    - choiceId: choice_a
+      choiceText: Go To 1B
+      nextNodeId: event_1B
+    - choiceId: choice_b
+      choiceText: Go To 2B
+      nextNodeId: event_2B
+  - nodeId: event_2A
+    displayName: Event 2A
+    video:
+      title: Initial Incident
+      description: 
+      sourceMode: 0
+      localClip: {fileID: 0}
+      url: 
+      thumbnail: {fileID: 0}
+    triggerMode: 1
+    triggerTimeSeconds: 0
+    autoContinueNextNodeId: 
+    choices:
+    - choiceId: choice_a
+      choiceText: Go To 1B
+      nextNodeId: event_1B
+    - choiceId: choice_b
+      choiceText: Go To 2B
+      nextNodeId: event_2B
+    - choiceId: choice_c
+      choiceText: Go To 3B
+      nextNodeId: event_3B
+  - nodeId: event_1B
+    displayName: Event 1B
+    video:
+      title: Initial Incident
+      description: 
+      sourceMode: 0
+      localClip: {fileID: 0}
+      url: 
+      thumbnail: {fileID: 0}
+    triggerMode: 1
+    triggerTimeSeconds: 0
+    autoContinueNextNodeId: 
+    choices:
+    - choiceId: choice_a
+      choiceText: Go To 1C
+      nextNodeId: event_1C
+    - choiceId: choice_b
+      choiceText: Go To 2C
+      nextNodeId: event_2C
+  - nodeId: event_2B
+    displayName: Event 2B
+    video:
+      title: Initial Incident
+      description: 
+      sourceMode: 0
+      localClip: {fileID: 0}
+      url: 
+      thumbnail: {fileID: 0}
+    triggerMode: 1
+    triggerTimeSeconds: 0
+    autoContinueNextNodeId: 
+    choices:
+    - choiceId: choice_a
+      choiceText: Go To 1C
+      nextNodeId: event_1C
+    - choiceId: choice_b
+      choiceText: Go To 2C
+      nextNodeId: event_2C
+  - nodeId: event_3B
+    displayName: Event 3B
+    video:
+      title: Initial Incident
+      description: 
+      sourceMode: 0
+      localClip: {fileID: 0}
+      url: 
+      thumbnail: {fileID: 0}
+    triggerMode: 1
+    triggerTimeSeconds: 0
+    autoContinueNextNodeId: 
+    choices:
+    - choiceId: choice_a
+      choiceText: Go To 2C
+      nextNodeId: event_2C
+  - nodeId: event_1C
+    displayName: Event 1C
+    video:
+      title: Initial Incident
+      description: 
+      sourceMode: 0
+      localClip: {fileID: 0}
+      url: 
+      thumbnail: {fileID: 0}
+    triggerMode: 1
+    triggerTimeSeconds: 0
+    autoContinueNextNodeId: 
+    choices:
+    - choiceId: choice_a
+      choiceText: Go To 1D
+      nextNodeId: event_1D
+    - choiceId: choice_b
+      choiceText: Go To 2D
+      nextNodeId: event_2D
+  - nodeId: event_2C
+    displayName: Event 2C
+    video:
+      title: Initial Incident
+      description: 
+      sourceMode: 0
+      localClip: {fileID: 0}
+      url: 
+      thumbnail: {fileID: 0}
+    triggerMode: 1
+    triggerTimeSeconds: 0
+    autoContinueNextNodeId: 
+    choices:
+    - choiceId: choice_a
+      choiceText: Go To C+
+      nextNodeId: event_C+
+  - nodeId: event_C+
+    displayName: Event C+
+    video:
+      title: Initial Incident
+      description: 
+      sourceMode: 0
+      localClip: {fileID: 0}
+      url: 
+      thumbnail: {fileID: 0}
+    triggerMode: 1
+    triggerTimeSeconds: 0
+    autoContinueNextNodeId: 
+    choices:
+    - choiceId: choice_a
+      choiceText: Go To 2D
+      nextNodeId: event_2D
+    - choiceId: choice_b
+      choiceText: Go To 3D
+      nextNodeId: event_3D
+  - nodeId: event_1D
+    displayName: Event 1D
+    video:
+      title: Initial Incident
+      description: 
+      sourceMode: 0
+      localClip: {fileID: 0}
+      url: 
+      thumbnail: {fileID: 0}
+    triggerMode: 1
+    triggerTimeSeconds: 0
+    autoContinueNextNodeId: 
+    choices: []
+  - nodeId: event_2D
+    displayName: Event 2D
+    video:
+      title: Initial Incident
+      description: 
+      sourceMode: 0
+      localClip: {fileID: 0}
+      url: 
+      thumbnail: {fileID: 0}
+    triggerMode: 1
+    triggerTimeSeconds: 0
+    autoContinueNextNodeId: 
+    choices: []
+  - nodeId: event_3D
+    displayName: Event 3D
+    video:
+      title: Initial Incident
+      description: 
+      sourceMode: 0
+      localClip: {fileID: 0}
+      url: 
+      thumbnail: {fileID: 0}
+    triggerMode: 1
+    triggerTimeSeconds: 0
+    autoContinueNextNodeId: 
+    choices: []
 --- !u!1 &1456677093
 GameObject:
   m_ObjectHideFlags: 0
