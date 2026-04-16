@@ -40,7 +40,7 @@ public class StoryFlowManager : MonoBehaviour
 
     private void Start()
     {
-        StartStory();
+        // StartStory();
     }
 
     public void StartStory()
