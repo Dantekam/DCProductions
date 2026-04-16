@@ -28,19 +28,9 @@ public class StoryFlowManager : MonoBehaviour
         }
     }
 
-    private void OnEnable()
-    {
-        playbackManager.VideoFinished += HandleVideoFinished;
-    }
-
-    private void OnDisable()
-    {
-        playbackManager.VideoFinished -= HandleVideoFinished;
-    }
-
     private void Start()
     {
-        StartStory();
+        // Story is now started by AppManager when the user presses BEGIN.
     }
 
     public void StartStory()
@@ -114,36 +104,6 @@ public class StoryFlowManager : MonoBehaviour
         LoadNodeById(selectedChoice.nextNodeId);
     }
 
-    private void HandleVideoFinished(VideoEntry finishedVideo)
-    {
-        if (CurrentNode == null)
-        {
-            Debug.LogWarning("StoryFlowManager: Video finished but CurrentNode is null.");
-            return;
-        }
-
-        Debug.Log($"StoryFlowManager: Video finished for node '{CurrentNode.nodeId}'.");
-
-        switch (CurrentNode.triggerMode)
-        {
-            case ChoiceTriggerMode.AutoContinue:
-                if (!string.IsNullOrWhiteSpace(CurrentNode.autoContinueNextNodeId))
-                {
-                    LoadNodeById(CurrentNode.autoContinueNextNodeId);
-                }
-                else
-                {
-                    Debug.LogWarning($"StoryFlowManager: Node '{CurrentNode.nodeId}' is AutoContinue but has no next node.");
-                }
-                break;
-
-            case ChoiceTriggerMode.OnVideoEnd:
-                Debug.Log($"StoryFlowManager: Node '{CurrentNode.nodeId}' is waiting for choice selection.");
-                break;
-
-            case ChoiceTriggerMode.AtTime:
-                Debug.Log($"StoryFlowManager: Node '{CurrentNode.nodeId}' was set to AtTime; choice UI logic will handle this later.");
-                break;
-        }
-    }
+    // Video-finished handling has moved to AppManager which orchestrates
+    // the UI flow (showing choices, end screens, etc.).
 }
