@@ -21,6 +21,9 @@ public class PlaybackManager : MonoBehaviour
     public event Action<VideoEntry> VideoFinished;
     public event Action<VideoEntry, string> VideoError;
 
+    public double CurrentTime => videoPlayer != null ? videoPlayer.time : 0;
+    public double CurrentLength => videoPlayer != null ? videoPlayer.length : 0;
+
     private VideoEntry currentVideo;
 
     private void Awake()

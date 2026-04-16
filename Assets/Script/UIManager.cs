@@ -4,6 +4,11 @@ using UnityEngine.UI;
 
 public class UIManager : MonoBehaviour
 {
+
+    [Header("Skyboxes")]
+    [SerializeField] private Material lobbySkybox;
+    [SerializeField] private Material videoSkybox;
+
     [Header("References")]
     [SerializeField] private StoryFlowManager storyFlowManager;
     [SerializeField] private PlaybackManager playbackManager;
@@ -14,14 +19,57 @@ public class UIManager : MonoBehaviour
 
     [Header("Choice UI")]
     [SerializeField] private TMP_Text choicePromptText;
+
     [SerializeField] private Button choiceButtonA;
     [SerializeField] private Button choiceButtonB;
+    [SerializeField] private Button choiceButtonC;
+
     [SerializeField] private TMP_Text choiceButtonAText;
     [SerializeField] private TMP_Text choiceButtonBText;
+    [SerializeField] private TMP_Text choiceButtonCText;
+
+    private bool choiceShownForCurrentNode = false;
+    private string lastNodeId = "";
 
     private void Awake()
     {
         ShowStartPanel();
+
+        if (lobbySkybox != null)
+        {
+            RenderSettings.skybox = lobbySkybox;
+            DynamicGI.UpdateEnvironment();
+        }
+    }
+
+    private void Update()
+    {
+        StoryNode currentNode = storyFlowManager.CurrentNode;
+        if (currentNode == null || playbackManager == null)
+            return;
+
+        if (currentNode.nodeId != lastNodeId)
+        {
+            lastNodeId = currentNode.nodeId;
+            choiceShownForCurrentNode = false;
+        }
+
+        if (choiceShownForCurrentNode)
+            return;
+
+        if (currentNode.triggerMode == ChoiceTriggerMode.AtTime)
+        {
+            if (playbackManager.IsPrepared && playbackManager.IsPlaying &&
+                playbackManager.CurrentTime >= currentNode.triggerTimeSeconds)
+            {
+                if (currentNode.choices != null && currentNode.choices.Count > 0)
+                {
+                    playbackManager.PauseVideo();
+                    ShowChoicePanel(currentNode);
+                    choiceShownForCurrentNode = true;
+                }
+            }
+        }
     }
 
     private void OnEnable()
@@ -29,6 +77,7 @@ public class UIManager : MonoBehaviour
         if (playbackManager != null)
         {
             playbackManager.VideoFinished += HandleVideoFinished;
+            playbackManager.VideoStarted += HandleVideoStarted;
         }
     }
 
@@ -37,11 +86,30 @@ public class UIManager : MonoBehaviour
         if (playbackManager != null)
         {
             playbackManager.VideoFinished -= HandleVideoFinished;
+            playbackManager.VideoStarted -= HandleVideoStarted;
+        }
+    }
+
+    private void HandleVideoStarted(VideoEntry startedVideo)
+    {
+        StoryNode currentNode = storyFlowManager.CurrentNode;
+        if (currentNode != null)
+        {
+            lastNodeId = currentNode.nodeId;
+            choiceShownForCurrentNode = false;
         }
     }
 
     public void OnPlayPressed()
     {
+        Debug.Log("Play button pressed.");
+
+        if (videoSkybox != null)
+        {
+            RenderSettings.skybox = videoSkybox;
+            DynamicGI.UpdateEnvironment();
+        }
+
         HideAllPanels();
         storyFlowManager.StartStory();
     }
@@ -64,6 +132,7 @@ public class UIManager : MonoBehaviour
             }
 
             ShowChoicePanel(currentNode);
+            choiceShownForCurrentNode = true;
         }
     }
 
@@ -88,38 +157,33 @@ public class UIManager : MonoBehaviour
         if (choicePromptText != null)
             choicePromptText.text = "Choose what happens next";
 
-        if (node.choices.Count > 0)
-        {
-            choiceButtonA.gameObject.SetActive(true);
-            choiceButtonAText.text = node.choices[0].choiceText;
+        SetupChoiceButton(choiceButtonA, choiceButtonAText, node, 0);
+        SetupChoiceButton(choiceButtonB, choiceButtonBText, node, 1);
+        SetupChoiceButton(choiceButtonC, choiceButtonCText, node, 2);
+    }
 
-            choiceButtonA.onClick.RemoveAllListeners();
-            choiceButtonA.onClick.AddListener(() =>
+    private void SetupChoiceButton(Button button, TMP_Text buttonText, StoryNode node, int index)
+    {
+        if (button == null || buttonText == null)
+            return;
+
+        if (node.choices != null && index < node.choices.Count)
+        {
+            button.gameObject.SetActive(true);
+
+            // Show the choice text from the node setup
+            buttonText.text = node.choices[index].choiceText;
+
+            button.onClick.RemoveAllListeners();
+            button.onClick.AddListener(() =>
             {
                 choicePanel.SetActive(false);
-                storyFlowManager.ChooseOption(0);
+                storyFlowManager.ChooseOption(index);
             });
         }
         else
         {
-            choiceButtonA.gameObject.SetActive(false);
-        }
-
-        if (node.choices.Count > 1)
-        {
-            choiceButtonB.gameObject.SetActive(true);
-            choiceButtonBText.text = node.choices[1].choiceText;
-
-            choiceButtonB.onClick.RemoveAllListeners();
-            choiceButtonB.onClick.AddListener(() =>
-            {
-                choicePanel.SetActive(false);
-                storyFlowManager.ChooseOption(1);
-            });
-        }
-        else
-        {
-            choiceButtonB.gameObject.SetActive(false);
+            button.gameObject.SetActive(false);
         }
     }
 }
