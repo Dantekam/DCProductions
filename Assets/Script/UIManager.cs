@@ -1,189 +1,163 @@
-using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class UIManager : MonoBehaviour
 {
+    [Header("Role")]
+    [SerializeField] private bool isProfessorMode = true;
 
     [Header("Skyboxes")]
     [SerializeField] private Material lobbySkybox;
     [SerializeField] private Material videoSkybox;
 
     [Header("References")]
-    [SerializeField] private StoryFlowManager storyFlowManager;
     [SerializeField] private PlaybackManager playbackManager;
+
+    [Header("Video")]
+    [SerializeField] private VideoEntry antarcticVideo;
 
     [Header("Panels")]
     [SerializeField] private GameObject startPanel;
-    [SerializeField] private GameObject choicePanel;
+    [SerializeField] private GameObject controlPanel;
 
-    [Header("Choice UI")]
-    [SerializeField] private TMP_Text choicePromptText;
+    [Header("Professor Controls")]
+    [SerializeField] private Slider timelineSlider;
 
-    [SerializeField] private Button choiceButtonA;
-    [SerializeField] private Button choiceButtonB;
-    [SerializeField] private Button choiceButtonC;
-
-    [SerializeField] private TMP_Text choiceButtonAText;
-    [SerializeField] private TMP_Text choiceButtonBText;
-    [SerializeField] private TMP_Text choiceButtonCText;
-
-    private bool choiceShownForCurrentNode = false;
-    private string lastNodeId = "";
+    private bool isDraggingSlider = false;
 
     private void Awake()
     {
-        ShowStartPanel();
+        SetSkybox(lobbySkybox);
 
-        if (lobbySkybox != null)
-        {
-            RenderSettings.skybox = lobbySkybox;
-            DynamicGI.UpdateEnvironment();
-        }
+        if (startPanel != null)
+            startPanel.SetActive(true);
+
+        if (controlPanel != null)
+            controlPanel.SetActive(false);
+
+        Debug.Log($"UIManager Awake - Professor Mode: {isProfessorMode}");
     }
 
     private void Update()
     {
-        StoryNode currentNode = storyFlowManager.CurrentNode;
-        if (currentNode == null || playbackManager == null)
-            return;
-
-        if (currentNode.nodeId != lastNodeId)
-        {
-            lastNodeId = currentNode.nodeId;
-            choiceShownForCurrentNode = false;
-        }
-
-        if (choiceShownForCurrentNode)
-            return;
-
-        if (currentNode.triggerMode == ChoiceTriggerMode.AtTime)
-        {
-            if (playbackManager.IsPrepared && playbackManager.IsPlaying &&
-                playbackManager.CurrentTime >= currentNode.triggerTimeSeconds)
-            {
-                if (currentNode.choices != null && currentNode.choices.Count > 0)
-                {
-                    playbackManager.PauseVideo();
-                    ShowChoicePanel(currentNode);
-                    choiceShownForCurrentNode = true;
-                }
-            }
-        }
-    }
-
-    private void OnEnable()
-    {
-        if (playbackManager != null)
-        {
-            playbackManager.VideoFinished += HandleVideoFinished;
-            playbackManager.VideoStarted += HandleVideoStarted;
-        }
-    }
-
-    private void OnDisable()
-    {
-        if (playbackManager != null)
-        {
-            playbackManager.VideoFinished -= HandleVideoFinished;
-            playbackManager.VideoStarted -= HandleVideoStarted;
-        }
-    }
-
-    private void HandleVideoStarted(VideoEntry startedVideo)
-    {
-        StoryNode currentNode = storyFlowManager.CurrentNode;
-        if (currentNode != null)
-        {
-            lastNodeId = currentNode.nodeId;
-            choiceShownForCurrentNode = false;
-        }
+        UpdateTimelineSlider();
     }
 
     public void OnPlayPressed()
     {
-        Debug.Log("Play button pressed.");
+        Debug.Log("Antarctic Play pressed.");
 
-        if (videoSkybox != null)
+        if (startPanel != null)
+            startPanel.SetActive(false);
+
+        if (controlPanel != null)
         {
-            RenderSettings.skybox = videoSkybox;
-            DynamicGI.UpdateEnvironment();
+            controlPanel.SetActive(isProfessorMode);
+            Debug.Log($"Professor Mode: {isProfessorMode}, Control Panel Active: {controlPanel.activeSelf}");
         }
 
-        HideAllPanels();
-        storyFlowManager.StartStory();
+        SetSkybox(videoSkybox);
+
+        if (playbackManager == null)
+        {
+            Debug.LogError("UIManager: PlaybackManager reference is missing.");
+            return;
+        }
+
+        if (antarcticVideo == null)
+        {
+            Debug.LogError("UIManager: Antarctic video entry is missing.");
+            return;
+        }
+
+        playbackManager.LoadVideo(antarcticVideo);
     }
 
-    private void HandleVideoFinished(VideoEntry finishedVideo)
+    public void OnPausePressed()
     {
-        StoryNode currentNode = storyFlowManager.CurrentNode;
-        if (currentNode == null)
+        if (!isProfessorMode) return;
+
+        if (playbackManager != null)
+            playbackManager.PauseVideo();
+    }
+
+    public void OnResumePressed()
+    {
+        if (!isProfessorMode) return;
+
+        if (playbackManager != null)
+            playbackManager.PlayVideo();
+    }
+
+    public void OnTogglePlayPausePressed()
+    {
+        if (!isProfessorMode) return;
+
+        if (playbackManager != null)
+            playbackManager.TogglePlayPause();
+    }
+
+    public void OnRestartPressed()
+    {
+        if (!isProfessorMode) return;
+
+        if (playbackManager == null)
             return;
 
-        if (currentNode.triggerMode == ChoiceTriggerMode.AutoContinue)
+        playbackManager.SeekTo(0);
+        playbackManager.PlayVideo();
+    }
+
+    private void UpdateTimelineSlider()
+    {
+        if (!isProfessorMode)
             return;
 
-        if (currentNode.triggerMode == ChoiceTriggerMode.OnVideoEnd)
-        {
-            if (currentNode.choices == null || currentNode.choices.Count == 0)
-            {
-                Debug.Log("UIManager: No choices to show for this node.");
-                return;
-            }
-
-            ShowChoicePanel(currentNode);
-            choiceShownForCurrentNode = true;
-        }
-    }
-
-    public void ShowStartPanel()
-    {
-        if (startPanel != null) startPanel.SetActive(true);
-        if (choicePanel != null) choicePanel.SetActive(false);
-    }
-
-    public void HideAllPanels()
-    {
-        if (startPanel != null) startPanel.SetActive(false);
-        if (choicePanel != null) choicePanel.SetActive(false);
-    }
-
-    public void ShowChoicePanel(StoryNode node)
-    {
-        if (choicePanel == null) return;
-
-        choicePanel.SetActive(true);
-
-        if (choicePromptText != null)
-            choicePromptText.text = "Choose what happens next";
-
-        SetupChoiceButton(choiceButtonA, choiceButtonAText, node, 0);
-        SetupChoiceButton(choiceButtonB, choiceButtonBText, node, 1);
-        SetupChoiceButton(choiceButtonC, choiceButtonCText, node, 2);
-    }
-
-    private void SetupChoiceButton(Button button, TMP_Text buttonText, StoryNode node, int index)
-    {
-        if (button == null || buttonText == null)
+        if (timelineSlider == null || playbackManager == null)
             return;
 
-        if (node.choices != null && index < node.choices.Count)
-        {
-            button.gameObject.SetActive(true);
+        if (isDraggingSlider)
+            return;
 
-            // Show the choice text from the node setup
-            buttonText.text = node.choices[index].choiceText;
+        double length = playbackManager.CurrentLength;
 
-            button.onClick.RemoveAllListeners();
-            button.onClick.AddListener(() =>
-            {
-                choicePanel.SetActive(false);
-                storyFlowManager.ChooseOption(index);
-            });
-        }
-        else
-        {
-            button.gameObject.SetActive(false);
-        }
+        if (length <= 0)
+            return;
+
+        timelineSlider.value = (float)(playbackManager.CurrentTime / length);
+    }
+
+    public void OnTimelineDragStarted()
+    {
+        if (!isProfessorMode) return;
+
+        isDraggingSlider = true;
+    }
+
+    public void OnTimelineDragEnded()
+    {
+        if (!isProfessorMode) return;
+
+        if (timelineSlider == null || playbackManager == null)
+            return;
+
+        double length = playbackManager.CurrentLength;
+
+        if (length <= 0)
+            return;
+
+        double targetTime = timelineSlider.value * length;
+        playbackManager.SeekTo(targetTime);
+
+        isDraggingSlider = false;
+    }
+
+    private void SetSkybox(Material skybox)
+    {
+        if (skybox == null)
+            return;
+
+        RenderSettings.skybox = skybox;
+        DynamicGI.UpdateEnvironment();
     }
 }

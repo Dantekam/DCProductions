@@ -89,9 +89,13 @@ public class PlaybackManager : MonoBehaviour
                     return;
                 }
 
+                string fullPath = VideoPathUtility.GetStreamingVideoPath(entry.url);
+
                 videoPlayer.source = VideoSource.Url;
                 videoPlayer.clip = null;
-                videoPlayer.url = entry.url;
+                videoPlayer.url = fullPath;
+
+                Debug.Log($"PlaybackManager: Loading URL video from {fullPath}");
                 break;
         }
 
